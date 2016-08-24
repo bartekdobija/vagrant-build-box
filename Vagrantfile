@@ -33,6 +33,11 @@ $yum_config = <<SCRIPT
   yum -y install wget R
 SCRIPT
 
+# GCC compiler
+$devtools_config  = <<SCRIPT
+  yum -y groupinstall 'Development Tools'
+SCRIPT
+
 $jdk_config = <<SCRIPT
   wget -q --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/7u79-b15/jdk-7u79-linux-x64.rpm" \
     && rpm -i jdk-7u79-linux-x64.rpm
@@ -78,6 +83,7 @@ Vagrant.configure(2) do |config|
   config.vm.provision :shell, :name => "system_config", :inline => $system_config
 
   config.vm.provision :shell, :name => "yum_config", :inline => $yum_config
+  config.vm.provision :shell, :name => "devtools_config", :inline => $devtools_config
   config.vm.provision :shell, :name => "jdk_config", :inline => $jdk_config
   config.vm.provision :shell, :name => "mvn_config", :inline => $mvn_config
   config.vm.provision :shell, :name => "information", :inline => $information
