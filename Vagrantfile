@@ -35,7 +35,22 @@ SCRIPT
 
 # GCC compiler
 $devtools_config  = <<SCRIPT
-  yum -y groupinstall 'Development Tools'
+  yum -y groupinstall 'Development Tools' && yum -y install curl
+SCRIPT
+
+$protobuf_config = <<SCRIPT
+
+  wget -q -P /tmp/ https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz \
+    && tar zxf /tmp/protobuf-2.5.0.tar.gz -C /tmp/ \
+    && cd /tmp/protobuf-2.5.0 \
+    && ./autogen.sh \
+    && ./configure \
+    && echo "building protobuf" \
+    && make > /dev/null \
+    && echo "installing protobuf" \
+    && make install > /dev/null \
+    && ldconfig
+
 SCRIPT
 
 $jdk_config = <<SCRIPT
@@ -86,6 +101,7 @@ Vagrant.configure(2) do |config|
   config.vm.provision :shell, :name => "devtools_config", :inline => $devtools_config
   config.vm.provision :shell, :name => "jdk_config", :inline => $jdk_config
   config.vm.provision :shell, :name => "mvn_config", :inline => $mvn_config
+  config.vm.provision :shell, :name => "protobuf_config", :inline => $protobuf_config
   config.vm.provision :shell, :name => "information", :inline => $information
 
 end
