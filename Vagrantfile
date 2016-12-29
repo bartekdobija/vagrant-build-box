@@ -83,7 +83,7 @@ SCRIPT
 
 Vagrant.configure(2) do |config|
 
-  config.vm.box = "boxcutter/centos66"
+  config.vm.box = "boxcutter/centos68"
   config.vm.hostname = "build.box.com"
   config.vm.network :public_network, :mac => "0800DEADBEEF"
 
