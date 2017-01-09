@@ -83,9 +83,9 @@ SCRIPT
 
 Vagrant.configure(2) do |config|
 
-  config.vm.box = "boxcutter/centos68"
+  config.vm.box = "thinktainer/centos-6_6-x64"
   config.vm.hostname = "build.box.com"
-  config.vm.network :public_network, :mac => "0800DEADBEEF"
+  config.vm.network :public_network, :mac => "9801a7b198c3"
 
   config.vm.provider "virtualbox" do |vb|
     vb.name = "build-box"
