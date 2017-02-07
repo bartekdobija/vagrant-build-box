@@ -35,7 +35,8 @@ SCRIPT
 
 # GCC compiler
 $devtools_config  = <<SCRIPT
-  yum -y groupinstall 'Development Tools' && yum -y install curl cmake
+  yum -y groupinstall 'Development Tools' \
+    && yum -y install curl cmake snappy snappy-devel openssl openssl-devel
 SCRIPT
 
 $protobuf_config = <<SCRIPT
