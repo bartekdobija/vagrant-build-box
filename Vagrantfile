@@ -35,7 +35,7 @@ SCRIPT
 
 # GCC compiler
 $devtools_config  = <<SCRIPT
-  yum -y groupinstall 'Development Tools' && yum -y install curl
+  yum -y groupinstall 'Development Tools' && yum -y install curl cmake
 SCRIPT
 
 $protobuf_config = <<SCRIPT
