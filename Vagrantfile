@@ -30,7 +30,7 @@ SCRIPT
 $yum_config = <<SCRIPT
   rpm -i http://mirror.unl.edu/epel/6/x86_64/epel-release-6-8.noarch.rpm 2> /dev/null
   yum -y remove java-1.6* > /dev/null
-  yum -y install wget R
+  yum -y install wget R python-setuptools
 SCRIPT
 
 # GCC compiler
@@ -55,8 +55,10 @@ $protobuf_config = <<SCRIPT
 SCRIPT
 
 $jdk_config = <<SCRIPT
-  wget -q --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/7u79-b15/jdk-7u79-linux-x64.rpm" \
-    && rpm -i jdk-7u79-linux-x64.rpm
+  wget -q --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jdk-8u151-linux-x64.rpm" \
+    && rpm -i jdk-8u151-linux-x64.rpm
+
+
 
   echo "export JAVA_HOME=/usr/java/default" > /etc/profile.d/java.sh
 SCRIPT
