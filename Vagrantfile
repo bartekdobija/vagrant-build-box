@@ -1,10 +1,15 @@
 # OS configuration
 $system_config = <<SCRIPT
-
   # disable IPv6
   if [ "$(grep disable_ipv6 /etc/sysctl.conf | wc -l)" == "0" ]; then
     echo "net.ipv6.conf.all.disable_ipv6=1" >> /etc/sysctl.conf \
-      && sysctl -f /etc/sysctl.conf
+      && echo "net.ipv6.conf.default.disable_ipv6=1" >> /etc/sysctl.conf \
+      && sysctl -f /etc/sysctl.conf \
+      && sysctl -p
+
+    sysctl -w net.ipv6.conf.all.disable_ipv6=1
+    sysctl -w net.ipv6.conf.default.disable_ipv6=1
+
   fi
 
   # this should be a persistent config
@@ -12,31 +17,38 @@ $system_config = <<SCRIPT
   ulimit -s 10240
   ulimit -c unlimited
 
-  service iptables stop && chkconfig iptables off
-
+  systemctl disable firewalld && systemctl stop firewalld
+  
   # Add entries to /etc/hosts
-  ip=$(ifconfig eth1 | awk -v host=$(hostname) '/inet addr/ {print substr($2,6)}')
+  ip=$(ip a s eth1 | awk '/inet/ {split($2, a,"/"); print a[1] }')
   host=$(hostname)
   echo "127.0.0.1 localhost" > /etc/hosts
   echo "$ip $host" >> /etc/hosts
-
   if [ "$(grep vm.swappiness /etc/sysctl.conf | wc -l)" == "0" ]; then
     echo "vm.swappiness=0" >> /etc/sysctl.conf && sysctl vm.swappiness=0
   fi
+
+  # disable selinux 
+  sudo setenforce 0
+  sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+
+  # disable swap 
+  swapoff -a
 
 SCRIPT
 
 # YUM configuration
 $yum_config = <<SCRIPT
-  rpm -i http://mirror.unl.edu/epel/6/x86_64/epel-release-6-8.noarch.rpm 2> /dev/null
+  rpm -i https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm 2> /dev/null
   yum -y remove java-1.6* > /dev/null
-  yum -y install wget R python-setuptools
+  yum -y install wget R python-setuptools pandoc curl curl-devel libxml2 libxml2-devel openssl openssl-devel
 SCRIPT
+
 
 # GCC compiler
 $devtools_config  = <<SCRIPT
   yum -y groupinstall 'Development Tools' \
-    && yum -y install curl cmake snappy snappy-devel openssl openssl-devel
+    && yum -y install curl cmake snappy snappy-devel openssl openssl-devel pandoc pandoc-citeproc 
 SCRIPT
 
 $protobuf_config = <<SCRIPT
@@ -54,20 +66,11 @@ $protobuf_config = <<SCRIPT
 
 SCRIPT
 
-$jdk_config = <<SCRIPT
-  wget -q --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jdk-8u151-linux-x64.rpm" \
-    && rpm -i jdk-8u151-linux-x64.rpm
-
-
-
-  echo "export JAVA_HOME=/usr/java/default" > /etc/profile.d/java.sh
-SCRIPT
-
 # MVN configuration
 $mvn_config = <<SCRIPT
   MVN_LINK=/usr/local/maven
   if [ ! -e ${MVN_LINK} ]; then
-    MVN_VERSION=3.3.9
+    MVN_VERSION=3.6.1
     wget -q -P /usr/local/ http://ftp.heanet.ie/mirrors/www.apache.org/dist/maven/maven-3/${MVN_VERSION}/binaries/apache-maven-${MVN_VERSION}-bin.tar.gz \
       && tar zxf /usr/local/apache-maven-${MVN_VERSION}-bin.tar.gz -C /usr/local \
       && ln -s /usr/local/apache-maven-${MVN_VERSION} ${MVN_LINK}
@@ -79,14 +82,14 @@ $mvn_config = <<SCRIPT
 SCRIPT
 
 $information = <<SCRIPT
-  ip=$(ifconfig eth1 | awk -v host=$(hostname) '/inet addr/ {print substr($2,6)}')
+  ip=$(ip a s eth1 | awk '/inet/ {split($2, a,"/"); print a[1]}')
   echo "Guest IP address: $ip"
-  echo "$ip build.box.com"
+  echo "$ip $(hostname)"
 SCRIPT
 
 Vagrant.configure(2) do |config|
 
-  config.vm.box = "thinktainer/centos-6_6-x64"
+  config.vm.box = "centos/7"
   config.vm.hostname = "build.box.com"
   config.vm.network :private_network, type: "dhcp"
 
@@ -102,7 +105,6 @@ Vagrant.configure(2) do |config|
 
   config.vm.provision :shell, :name => "yum_config", :inline => $yum_config
   config.vm.provision :shell, :name => "devtools_config", :inline => $devtools_config
-  config.vm.provision :shell, :name => "jdk_config", :inline => $jdk_config
   config.vm.provision :shell, :name => "mvn_config", :inline => $mvn_config
   config.vm.provision :shell, :name => "protobuf_config", :inline => $protobuf_config
   config.vm.provision :shell, :name => "information", :inline => $information
